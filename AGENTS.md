@@ -39,7 +39,7 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
 ## 3. Aufbau
 
 - **Technik** wie die KickTime-App: TanStack Start/Router (Datei-Routen `src/routes/`), React 19,
-  Tailwind v4, Zustand, Radix, framer-motion, Cloudflare Workers (Worker `kicktime-2028-team`).
+  Tailwind v4, Zustand, Radix, framer-motion, Cloudflare Workers (Worker `kicktime2028-admin`).
 - **Rahmen:** `components/shell/` – `TeamShell` (Seitenleiste am Computer, unten 4 Reiter +
   „Mehr“ am Handy, `Page` = Seitenkopf), `PinScreen`, `nav.ts` (alle Bereiche).
 - **Bereiche:** `components/sections/*Section.tsx`, je eine Route: `/` Übersicht, `/live`,
@@ -102,10 +102,10 @@ Einmalig im Cloudflare-Dashboard:
 
 1. **Workers & Pages → Erstellen → Worker → „Mit Git verbinden“** (bzw. „Import a repository“).
 2. GitHub-Repo **`phantom-35/kicktime2028-admin`** wählen, Zweig `main`.
-3. Name: **`kicktime-2028-team`** (muss zu `wrangler.jsonc` passen).
+3. Name: **`kicktime2028-admin`** (muss zu `wrangler.jsonc` passen).
 4. Build-Befehl: `npm install && npm run build` · Deploy-Befehl: `npx wrangler deploy`.
 5. Speichern – danach baut Cloudflare bei jedem Push automatisch.
-6. Adresse: zunächst `kicktime-2028-team.<konto>.workers.dev`. Später laut Domain-Plan z. B.
+6. Adresse: zunächst `kicktime2028-admin.<konto>.workers.dev`. Später laut Domain-Plan z. B.
    `team28.kicktime.app` (Workers → Einstellungen → Domains).
 
 Auf dem Handy: Adresse in Safari öffnen → Teilen → „Zum Home-Bildschirm“, von dort öffnen →

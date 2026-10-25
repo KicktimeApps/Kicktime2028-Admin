@@ -35,5 +35,5 @@ Arbeitsregeln: [AGENTS.md](AGENTS.md).
 
 ## Veröffentlichen (Cloudflare)
 
-Wie die KickTime-App: eigener Worker `kicktime-2028-team`, Build `npm install && npm run build`,
+Wie die KickTime-App: eigener Worker `kicktime2028-admin`, Build `npm install && npm run build`,
 Deploy `npx wrangler deploy`. Einrichtung siehe AGENTS.md, Abschnitt 6.
