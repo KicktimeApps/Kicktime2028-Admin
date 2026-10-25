@@ -17,4 +17,4 @@ export const PUBLIC_CONFIG = {
   /** Öffentlicher VAPID-Schlüssel für Web Push */
   vapidPublicKey:
     "BAwssLr5n4lZlvjABX9UfZENwu7iZyFRMh6WixMH6hZHvOvoudivTaBp2u18ZgYZz4vK_DkdNgxcEOKfs57VxA0",
-};
+}; 
