@@ -170,6 +170,84 @@ export const ADMIN: Record<string, unknown> = {
       },
     ],
   },
+  find_person: {
+    ok: true,
+    data: [
+      {
+        device: "55555555-5555-4555-8555-555555555555",
+        ban: null,
+        memberships: [
+          {
+            groupId: "11111111-1111-4111-8111-111111111111",
+            groupName: "Bürorunde",
+            code: "ABC123",
+            memberId: "44444444-4444-4444-8444-444444444444",
+            name: "Lena",
+            owner: false,
+            approved: true,
+            banned: false,
+            bannedBy: null,
+            joinedAt: iso(4000),
+            tips: 28,
+          },
+          {
+            groupId: "22222222-2222-4222-8222-222222222222",
+            groupName: "Familie",
+            code: "XYZ789",
+            memberId: "66666666-6666-4666-8666-666666666666",
+            name: "Lenchen",
+            owner: true,
+            approved: true,
+            banned: false,
+            bannedBy: null,
+            joinedAt: iso(3000),
+            tips: 30,
+          },
+        ],
+        requests: [],
+      },
+    ],
+  },
+  group_board: {
+    ok: true,
+    data: {
+      group: { id: "11111111-1111-4111-8111-111111111111", code: "ABC123", name: "Bürorunde" },
+      members: [
+        {
+          id: "m-ben",
+          name: "Ben",
+          isOwner: true,
+          champion: "GER",
+          tips: { m01: { home: 1, away: 1 } },
+        },
+        {
+          id: "m-lena",
+          name: "Lena",
+          isOwner: false,
+          champion: "ESP",
+          tips: { m01: { home: 2, away: 0 } },
+        },
+      ],
+    },
+  },
+  team_log: {
+    rows: [
+      {
+        id: 2,
+        at: iso(5),
+        action: "set",
+        detail: "Korrektur m01: 2:0 live",
+        device_id: null,
+      },
+      {
+        id: 1,
+        at: iso(90),
+        action: "decide",
+        detail: "Antrag von Tom angenommen",
+        device_id: "77777777-7777-4777-8777-777777777777",
+      },
+    ],
+  },
   team_device: {
     registered: false,
     count: 1,

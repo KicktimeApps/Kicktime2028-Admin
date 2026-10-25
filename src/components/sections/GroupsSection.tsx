@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "@tanstack/react-router";
 import {
   Ban,
   ChevronDown,
@@ -6,6 +7,7 @@ import {
   RefreshCw,
   ShieldBan,
   Trash2,
+  Trophy,
   Undo2,
   UserMinus,
 } from "lucide-react";
@@ -186,7 +188,16 @@ function GroupDetail({
 
   return (
     <div className="space-y-2 border-t border-border px-3 pb-3 pt-2.5">
-      <div className="text-[12px] text-muted-foreground">Erstellt {fmtTime(group.created_at)}</div>
+      <div className="flex items-center justify-between gap-2 text-[12px] text-muted-foreground">
+        <span>Erstellt {fmtTime(group.created_at)}</span>
+        <Link
+          to="/tipprunden/$groupId"
+          params={{ groupId: group.id }}
+          className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+        >
+          <Trophy className="h-3.5 w-3.5" /> Tabelle ansehen
+        </Link>
+      </div>
       {!members && <div className="text-muted-foreground">Lädt …</div>}
       <ul className="space-y-1.5">
         {members?.map((m) => {

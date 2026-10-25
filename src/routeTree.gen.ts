@@ -16,11 +16,14 @@ import { Route as KorrekturRouteImport } from './routes/korrektur'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as MehrRouteImport } from './routes/mehr'
 import { Route as MitteilungenRouteImport } from './routes/mitteilungen'
+import { Route as PersonenRouteImport } from './routes/personen'
+import { Route as ProtokollRouteImport } from './routes/protokoll'
 import { Route as SpieleRouteImport } from './routes/spiele'
 import { Route as StatistikRouteImport } from './routes/statistik'
 import { Route as SystemRouteImport } from './routes/system'
 import { Route as TipprundenRouteImport } from './routes/tipprunden'
 import { Route as VersionDotjsonRouteImport } from './routes/version[.]json'
+import { Route as TipprundenGroupIdRouteImport } from './routes/tipprunden_.$groupId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -57,6 +60,16 @@ const MitteilungenRoute = MitteilungenRouteImport.update({
   path: '/mitteilungen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PersonenRoute = PersonenRouteImport.update({
+  id: '/personen',
+  path: '/personen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtokollRoute = ProtokollRouteImport.update({
+  id: '/protokoll',
+  path: '/protokoll',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpieleRoute = SpieleRouteImport.update({
   id: '/spiele',
   path: '/spiele',
@@ -82,6 +95,11 @@ const VersionDotjsonRoute = VersionDotjsonRouteImport.update({
   path: '/version.json',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TipprundenGroupIdRoute = TipprundenGroupIdRouteImport.update({
+  id: '/tipprunden_/$groupId',
+  path: '/tipprunden/$groupId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -91,11 +109,14 @@ export interface FileRoutesByFullPath {
   '/live': typeof LiveRoute
   '/mehr': typeof MehrRoute
   '/mitteilungen': typeof MitteilungenRoute
+  '/personen': typeof PersonenRoute
+  '/protokoll': typeof ProtokollRoute
   '/spiele': typeof SpieleRoute
   '/statistik': typeof StatistikRoute
   '/system': typeof SystemRoute
   '/tipprunden': typeof TipprundenRoute
   '/version.json': typeof VersionDotjsonRoute
+  '/tipprunden/$groupId': typeof TipprundenGroupIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -105,11 +126,14 @@ export interface FileRoutesByTo {
   '/live': typeof LiveRoute
   '/mehr': typeof MehrRoute
   '/mitteilungen': typeof MitteilungenRoute
+  '/personen': typeof PersonenRoute
+  '/protokoll': typeof ProtokollRoute
   '/spiele': typeof SpieleRoute
   '/statistik': typeof StatistikRoute
   '/system': typeof SystemRoute
   '/tipprunden': typeof TipprundenRoute
   '/version.json': typeof VersionDotjsonRoute
+  '/tipprunden/$groupId': typeof TipprundenGroupIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -120,11 +144,14 @@ export interface FileRoutesById {
   '/live': typeof LiveRoute
   '/mehr': typeof MehrRoute
   '/mitteilungen': typeof MitteilungenRoute
+  '/personen': typeof PersonenRoute
+  '/protokoll': typeof ProtokollRoute
   '/spiele': typeof SpieleRoute
   '/statistik': typeof StatistikRoute
   '/system': typeof SystemRoute
   '/tipprunden': typeof TipprundenRoute
   '/version.json': typeof VersionDotjsonRoute
+  '/tipprunden_/$groupId': typeof TipprundenGroupIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -136,11 +163,14 @@ export interface FileRouteTypes {
     | '/live'
     | '/mehr'
     | '/mitteilungen'
+    | '/personen'
+    | '/protokoll'
     | '/spiele'
     | '/statistik'
     | '/system'
     | '/tipprunden'
     | '/version.json'
+    | '/tipprunden/$groupId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -150,11 +180,14 @@ export interface FileRouteTypes {
     | '/live'
     | '/mehr'
     | '/mitteilungen'
+    | '/personen'
+    | '/protokoll'
     | '/spiele'
     | '/statistik'
     | '/system'
     | '/tipprunden'
     | '/version.json'
+    | '/tipprunden/$groupId'
   id:
     | '__root__'
     | '/'
@@ -164,11 +197,14 @@ export interface FileRouteTypes {
     | '/live'
     | '/mehr'
     | '/mitteilungen'
+    | '/personen'
+    | '/protokoll'
     | '/spiele'
     | '/statistik'
     | '/system'
     | '/tipprunden'
     | '/version.json'
+    | '/tipprunden_/$groupId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -179,11 +215,14 @@ export interface RootRouteChildren {
   LiveRoute: typeof LiveRoute
   MehrRoute: typeof MehrRoute
   MitteilungenRoute: typeof MitteilungenRoute
+  PersonenRoute: typeof PersonenRoute
+  ProtokollRoute: typeof ProtokollRoute
   SpieleRoute: typeof SpieleRoute
   StatistikRoute: typeof StatistikRoute
   SystemRoute: typeof SystemRoute
   TipprundenRoute: typeof TipprundenRoute
   VersionDotjsonRoute: typeof VersionDotjsonRoute
+  TipprundenGroupIdRoute: typeof TipprundenGroupIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -237,6 +276,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MitteilungenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/personen': {
+      id: '/personen'
+      path: '/personen'
+      fullPath: '/personen'
+      preLoaderRoute: typeof PersonenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/protokoll': {
+      id: '/protokoll'
+      path: '/protokoll'
+      fullPath: '/protokoll'
+      preLoaderRoute: typeof ProtokollRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/spiele': {
       id: '/spiele'
       path: '/spiele'
@@ -272,6 +325,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VersionDotjsonRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/tipprunden_/$groupId': {
+      id: '/tipprunden_/$groupId'
+      path: '/tipprunden/$groupId'
+      fullPath: '/tipprunden/$groupId'
+      preLoaderRoute: typeof TipprundenGroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -283,11 +343,14 @@ const rootRouteChildren: RootRouteChildren = {
   LiveRoute: LiveRoute,
   MehrRoute: MehrRoute,
   MitteilungenRoute: MitteilungenRoute,
+  PersonenRoute: PersonenRoute,
+  ProtokollRoute: ProtokollRoute,
   SpieleRoute: SpieleRoute,
   StatistikRoute: StatistikRoute,
   SystemRoute: SystemRoute,
   TipprundenRoute: TipprundenRoute,
   VersionDotjsonRoute: VersionDotjsonRoute,
+  TipprundenGroupIdRoute: TipprundenGroupIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

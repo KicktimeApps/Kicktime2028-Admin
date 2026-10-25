@@ -29,11 +29,13 @@ import {
   fetchFeedback,
   fetchGroups,
   fetchStats,
+  fetchTeamLog,
   type AdminConfig,
   type AdminGroup,
   type FeedbackRow,
   type Stats,
   type StatsExt,
+  type TeamLogRow,
   type WatchAlert,
 } from "@/services/admin";
 import { refreshLiveData } from "@/services/live-data";
@@ -41,6 +43,7 @@ import { useSourceDetails } from "@/services/source-details";
 import { useMatchStore } from "@/store/match-store";
 import { STAGE_LABEL } from "@/tournament/config";
 import { scoreText, sourcesDiffer } from "./match-format";
+import { logIcon } from "./log-format";
 import { MatchLine } from "./MatchLine";
 import { Page } from "@/components/shell/TeamShell";
 import { fmtTime } from "./use-action";
@@ -55,6 +58,8 @@ type Data = {
   /** null = SQL-Update „Wächter“ fehlt, undefined = noch nicht geladen. */
   alerts: WatchAlert[] | null | undefined;
   feedback: FeedbackRow[] | null;
+  /** null = SQL-Update „Team-App“ fehlt. */
+  log: TeamLogRow[] | null | undefined;
   at: number | null;
 };
 
@@ -66,17 +71,19 @@ function useDashboardData(pin: string) {
     groups: null,
     alerts: undefined,
     feedback: null,
+    log: undefined,
     at: null,
   });
   const [loading, setLoading] = useState(false);
   const load = useCallback(async () => {
     setLoading(true);
-    const [stats, config, groups, alerts, feedback] = await Promise.all([
+    const [stats, config, groups, alerts, feedback, log] = await Promise.all([
       fetchStats(pin),
       fetchConfig(pin),
       fetchGroups(pin),
       fetchAlerts(pin),
       fetchFeedback(pin),
+      fetchTeamLog(pin),
     ]);
     setLoading(false);
     setData((d) => ({
@@ -85,6 +92,7 @@ function useDashboardData(pin: string) {
       groups: groups.ok ? (groups.data.data ?? []) : d.groups,
       alerts: alerts.ok ? alerts.data.alerts : d.alerts,
       feedback: feedback.ok ? feedback.data.rows : d.feedback,
+      log: log.ok ? log.data.rows : d.log,
       at: Date.now(),
     }));
   }, [pin]);
@@ -167,6 +175,7 @@ export function OverviewSection({ pin }: { pin: string }) {
           </div>
           <div className="contents lg:block lg:space-y-4">
             <TodoPanel data={data} className="order-1" />
+            <LogPanel rows={data.log} className="order-4" />
             <FeedbackPanel rows={data.feedback} className="order-4" />
             <AnnouncementPanel config={data.config} className="order-5" />
           </div>
@@ -779,6 +788,40 @@ function AnnouncementPanel({
       ) : (
         <p className="text-muted-foreground">Kein Hinweis aktiv.</p>
       )}
+    </Panel>
+  );
+}
+
+function LogPanel({
+  rows,
+  className,
+}: {
+  rows: TeamLogRow[] | null | undefined;
+  className?: string;
+}) {
+  if (rows === null) return null; // SQL-Update fehlt noch
+  const latest = (rows ?? []).slice(0, 4);
+  return (
+    <Panel
+      title="Letzte Team-Aktionen"
+      className={className}
+      action={<PanelLink to="/protokoll">Protokoll</PanelLink>}
+    >
+      {rows && latest.length === 0 && <p className="text-muted-foreground">Noch nichts.</p>}
+      <ul className="space-y-2.5">
+        {latest.map((r) => {
+          const Icon = logIcon(r.action);
+          return (
+            <li key={r.id} className="flex gap-2.5">
+              <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              <div className="min-w-0">
+                <p className="line-clamp-2 break-words">{r.detail ?? r.action}</p>
+                <div className="text-[11.5px] text-muted-foreground">{fmtTime(r.at)}</div>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
     </Panel>
   );
 }

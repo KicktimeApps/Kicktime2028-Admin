@@ -44,7 +44,11 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
   „Mehr“ am Handy, `Page` = Seitenkopf), `PinScreen`, `nav.ts` (alle Bereiche).
 - **Bereiche:** `components/sections/*Section.tsx`, je eine Route: `/` Übersicht, `/live`,
   `/spiele` (Spiele-Check), `/korrektur`, `/tipprunden`, `/antraege`, `/mitteilungen`,
-  `/statistik`, `/feedback`, `/system`, `/mehr` (Handy-Menü).
+  `/statistik`, `/feedback`, `/system`, `/mehr` (Handy-Menü), dazu (ab 1.1.0) `/personen`
+  (Personensuche über alle Runden, eine Karte = ein Gerät), `/tipprunden/$groupId`
+  (Rundentabelle mit `buildBoard` wie in der App, Tipps erst ab Anpfiff) und `/protokoll`
+  (Team-Protokoll; „dieses Gerät“ über `by` = Geräte-ID, die `services/admin.ts` mitschickt).
+  Server dafür: SQL-Update `20261025180000_team_app.sql` + Edge Function `admin` (KickTime 2.15.0).
 - **PIN:** `lib/pin.ts` – nur im Speicher, Sperre nach 30 Min. ohne Bedienung. Seite neu laden =
   PIN neu eingeben (gewollt). Navigation deshalb immer über Links, nie `location.href`.
 - **Zähler** in der Navigation (offene Anträge, aktive Wächter-Probleme): `hooks/useBadges.ts`,

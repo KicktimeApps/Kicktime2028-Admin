@@ -48,10 +48,12 @@ test("alle Bereiche öffnen ohne Fehler und ohne seitliches Scrollen", async ({ 
     ["Spiele-Check", "03-spiele"],
     ["Korrektur", "04-korrektur"],
     ["Tipprunden", "05-tipprunden"],
+    ["Personen", "05b-personen"],
     ["Anträge", "06-antraege"],
     ["Mitteilungen", "07-mitteilungen"],
     ["Statistik", "08-statistik"],
     ["Feedback", "09-feedback"],
+    ["Protokoll", "09b-protokoll"],
     ["System", "10-system"],
   ];
   for (const [label, file] of areas) {
@@ -132,4 +134,45 @@ test("Hell-Modus lässt sich einstellen", async ({ page }, info) => {
   await shot(page, "11-uebersicht-hell", info.project.name);
   await go(page, "Spiele-Check");
   await shot(page, "12-spiele-hell", info.project.name);
+});
+
+test("Personensuche findet über alle Runden und sperrt in einer Runde", async ({ page }, info) => {
+  const { calls } = await setup(page);
+  await unlock(page);
+  await go(page, "Personen");
+  await page.getByLabel("Name suchen").fill("len");
+  await expect(page.getByText("auch: Lenchen")).toBeVisible();
+  await expect(page.getByText("Familie")).toBeVisible();
+  await shot(page, "13-personen-treffer", info.project.name);
+  expect(calls.find((c) => c.action === "find_person")?.body).toMatchObject({ query: "len" });
+  await page.getByRole("button", { name: "In der Runde sperren" }).first().click();
+  await expect
+    .poll(() => calls.find((c) => c.action === "member_remove")?.body)
+    .toMatchObject({ groupId: "11111111-1111-4111-8111-111111111111", ban: true });
+});
+
+test("Rundentabelle rechnet wie die App (laufendes Spiel zählt vorläufig)", async ({
+  page,
+}, info) => {
+  await setup(page);
+  await unlock(page);
+  await go(page, "Tipprunden");
+  await page.getByRole("button", { name: /Bürorunde/ }).click();
+  await page.getByRole("link", { name: "Tabelle ansehen" }).click();
+  await expect(page.getByRole("heading", { name: "Rundentabelle" })).toBeVisible();
+  // ESPN meldet 2:0 (live) → Lena tippte 2:0 = 4 Punkte, Ben 1:1 = 0.
+  const first = page.getByRole("row").nth(1);
+  await expect(first).toContainText("Lena");
+  await expect(first).toContainText("+4 live");
+  await page.waitForTimeout(400);
+  await shot(page, "14-tabelle", info.project.name);
+});
+
+test("Protokoll zeigt die Team-Aktionen", async ({ page }) => {
+  await setup(page);
+  await unlock(page);
+  await expect(page.getByText("Korrektur m01: 2:0 live").first()).toBeVisible();
+  await go(page, "Protokoll");
+  await expect(page.getByText("Antrag von Tom angenommen")).toBeVisible();
+  await expect(page.getByText(/Gerät …7777/)).toBeVisible();
 });

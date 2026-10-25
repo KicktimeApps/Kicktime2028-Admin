@@ -1,6 +1,7 @@
 import {
   BarChart3,
   CalendarCheck,
+  History,
   Inbox,
   LayoutGrid,
   Megaphone,
@@ -8,6 +9,7 @@ import {
   Pencil,
   Radio,
   Settings2,
+  UserSearch,
   Users,
   type LucideIcon,
 } from "lucide-react";
@@ -26,10 +28,12 @@ export const NAV: NavItem[] = [
   { to: "/spiele", label: "Spiele-Check", icon: CalendarCheck },
   { to: "/korrektur", label: "Korrektur", icon: Pencil },
   { to: "/tipprunden", label: "Tipprunden", icon: Users },
+  { to: "/personen", label: "Personen", icon: UserSearch },
   { to: "/antraege", label: "Anträge", icon: Inbox, badge: "requests" },
   { to: "/mitteilungen", label: "Mitteilungen", icon: Megaphone },
   { to: "/statistik", label: "Statistik", icon: BarChart3 },
   { to: "/feedback", label: "Feedback", icon: MessageSquareText },
+  { to: "/protokoll", label: "Protokoll", icon: History },
   { to: "/system", label: "System", icon: Settings2 },
 ];
 
