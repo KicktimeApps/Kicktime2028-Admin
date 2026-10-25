@@ -1,6 +1,6 @@
 {
   "name": "kicktime-2028-team",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "private": true,
   "sideEffects": false,
   "type": "module",
@@ -65,5 +65,8 @@
     "vite": "^8",
     "vitest": "^5.0.5",
     "wrangler": "^4.151.3"
+  },
+  "overrides": {
+    "undici": "7.30.1"
   }
 }
