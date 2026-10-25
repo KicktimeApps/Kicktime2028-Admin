@@ -247,3 +247,22 @@ test("abgelaufene Face-ID-Freigabe führt zurück zum Sperrbildschirm", async ({
   await page.getByRole("button", { name: "Entsperren" }).click();
   await expect(page.getByRole("button", { name: "Mit Face ID entsperren" })).toBeVisible();
 });
+
+test("Live-Daten: abweichende Tipp-Sperre wird gezeigt und lässt sich abgleichen", async ({
+  page,
+}) => {
+  const { calls } = await setup(page, {
+    admin: { fixtures_list: { rows: [{ match_id: "m02", kickoff_utc: "2028-06-10T19:00:00Z" }] } },
+  });
+  await unlock(page);
+  await go(page, "Live-Daten");
+  await expect(page.getByText(/Tipp-Sperre: 51 Spiele mit anderer/)).toBeVisible();
+  await expect(page.getByText(/Server fehlt/).first()).toBeVisible();
+  await expect(page.getByText("… und 47 weitere")).toBeVisible();
+  const lists = () => calls.filter((c) => c.action === "fixtures_list").length;
+  const before = lists();
+  await page.getByRole("button", { name: "Anstoßzeiten abgleichen" }).click();
+  await expect.poll(() => calls.filter((c) => c.action === "fixtures").length).toBe(1);
+  // Danach wird neu verglichen.
+  await expect.poll(lists).toBe(before + 1);
+});

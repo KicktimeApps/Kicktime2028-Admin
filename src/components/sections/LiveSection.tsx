@@ -1,21 +1,24 @@
-import { Clock, Database, FlaskConical, Save, Trash2, Zap } from "lucide-react";
+import { Clock, Database, FlaskConical, Save, Trash2, TriangleAlert, Zap } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
   clearLiveCache,
   fetchConfig,
+  fetchServerFixtures,
   resetStoredResults,
   saveLiveSource,
   syncFixtures,
   testLiveSource,
   type AdminConfig,
+  type ServerFixture,
   type SourceTest,
 } from "@/services/admin";
 import { refreshLiveData } from "@/services/live-data";
 import { useMatchStore } from "@/store/match-store";
 import { getNation } from "@/tournament/nations";
 import { ActionButton, Card, ConfirmButton, Info } from "./shared";
+import { fixtureDiffs, fmtKickoff } from "./match-format";
 import { WatchCard } from "./WatchCard";
 import { fmtTime, useAction } from "./use-action";
 
@@ -61,6 +64,20 @@ export function LiveSection({ pin }: { pin: string }) {
     void load();
   }, [load]);
 
+  // Tipp-Sperre des Servers mit den Anstoßzeiten der App vergleichen.
+  const matches = useMatchStore((s) => s.tournament.matches);
+  const [serverFx, setServerFx] = useState<ServerFixture[] | "missing" | null>(null);
+  const loadFixtures = useCallback(async () => {
+    const res = await fetchServerFixtures(pin);
+    if (res.ok) setServerFx(Array.isArray(res.data.rows) ? res.data.rows : "missing");
+    // Edge Function admin noch ohne „fixtures_list“ (vor KickTime 2.18.0).
+    else if (/Unbekannte Aktion/.test(res.error)) setServerFx("missing");
+  }, [pin]);
+  useEffect(() => {
+    void loadFixtures();
+  }, [loadFixtures]);
+  const diffs = Array.isArray(serverFx) ? fixtureDiffs(matches, serverFx) : null;
+
   const url = `https://api.openligadb.de/getmatchdata/${form.league || "…"}/${form.season || "…"}${form.suffix ? `/${form.suffix}` : ""}`;
   const saved =
     config?.liveSource ?? (config ? { ...config.defaults, suffix: "", paused: false } : null);
@@ -103,6 +120,38 @@ export function LiveSection({ pin }: { pin: string }) {
           />
         </div>
         <Info label="Fehler" value={live.lastError ?? "keiner"} />
+        {serverFx === "missing" && (
+          <Info label="Tipp-Sperre" value="Vergleich braucht das Server-Update" />
+        )}
+        {diffs && diffs.length === 0 && (
+          <Info label="Tipp-Sperre" value={`passt zu allen ${matches.length} Spielen`} />
+        )}
+        {diffs && diffs.length > 0 && (
+          <div className="space-y-1 rounded-xl border border-gold/40 bg-gold/10 px-3 py-2">
+            <div className="flex items-center gap-1.5 font-semibold text-gold">
+              <TriangleAlert className="h-4 w-4" />
+              Tipp-Sperre: {diffs.length} Spiel{diffs.length === 1 ? "" : "e"} mit anderer
+              Anstoßzeit
+            </div>
+            {diffs.slice(0, 4).map((d) => (
+              <div key={d.id} className="tabular text-[12.5px] text-muted-foreground">
+                Spiel {Number(d.id.slice(1))}: App {fmtKickoff(d.app, true)} · Server{" "}
+                {d.server
+                  ? // Gleicher Tag → nur die Uhrzeit (kürzer, bricht nicht um).
+                    fmtKickoff(
+                      d.server,
+                      new Date(d.server).toDateString() !== new Date(d.app).toDateString(),
+                    )
+                  : "fehlt"}
+              </div>
+            ))}
+            {diffs.length > 4 && (
+              <div className="text-[12.5px] text-muted-foreground">
+                … und {diffs.length - 4} weitere
+              </div>
+            )}
+          </div>
+        )}
         <div className="break-all rounded-xl bg-subtle px-3 py-2 font-mono text-[11.5px] text-muted-foreground">
           {live.apiUrl ?? "noch keine Abfrage"}
         </div>
@@ -130,7 +179,7 @@ export function LiveSection({ pin }: { pin: string }) {
                     })),
                   ),
                 (d) => `${d.count} Anstoßzeiten übernommen`,
-              )
+              ).then(() => loadFixtures())
             }
           >
             Anstoßzeiten abgleichen

@@ -19,3 +19,22 @@ export function sourcesDiffer(p?: ResultRecord, b?: ResultRecord): boolean {
   if (!p || !b) return false;
   return scoreText(p) !== scoreText(b) || (p.status === "finished") !== (b.status === "finished");
 }
+
+export type FixtureDiff = { id: string; app: string; server: string | null };
+
+/**
+ * Spiele, bei denen die Tipp-Sperre des Servers (kt_fixtures) eine andere
+ * Anstoßzeit hat als die App gerade anzeigt – oder das Spiel dort fehlt.
+ */
+export function fixtureDiffs(
+  matches: { id: string; kickoffUtc: string }[],
+  server: { match_id: string; kickoff_utc: string }[],
+): FixtureDiff[] {
+  const byId = new Map(server.map((f) => [f.match_id, f.kickoff_utc]));
+  return matches
+    .filter((m) => {
+      const s = byId.get(m.id);
+      return !s || Date.parse(s) !== Date.parse(m.kickoffUtc);
+    })
+    .map((m) => ({ id: m.id, app: m.kickoffUtc, server: byId.get(m.id) ?? null }));
+}

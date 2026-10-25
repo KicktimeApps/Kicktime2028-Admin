@@ -71,6 +71,9 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
 - **Nie viele Admin-Aufrufe gleichzeitig:** Der Server zählt jeden Aufruf vor der PIN-Prüfung –
   zu viele parallel = Sperre „zu viele Versuche“. `services/admin.ts` (gemeinsamer Code) begrenzt
   auf 2 gleichzeitig. Neue Seiten also nicht mit Dutzenden Einzelabrufen bauen.
+- **Tipp-Sperre vergleichen (ab 1.3.0):** Live-Daten → Status lädt die Anstoßzeiten des Servers
+  (`fixtures_list`, KickTime 2.18.0) und zeigt Abweichungen zu den Zeiten der App
+  (`fixtureDiffs` in `match-format.ts`); „Anstoßzeiten abgleichen“ übernimmt sie und vergleicht neu.
 - **Zähler** in der Navigation (offene Anträge, aktive Wächter-Probleme): `hooks/useBadges.ts`,
   alle 2 Minuten.
 - **Live-Daten:** `hooks/useLiveEngine.ts` (rund um Spiele jede Minute, sonst alle 5 Min.).
