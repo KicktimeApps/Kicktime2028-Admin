@@ -123,6 +123,24 @@ test("Feedback nach Art filtern", async ({ page }) => {
   await expect(page.getByText("Super App")).toHaveCount(0);
 });
 
+test("Übersicht lädt beim Zurückwechseln nicht neu, nur auf Knopfdruck", async ({ page }) => {
+  const { calls, errors } = await setup(page);
+  await unlock(page);
+  await expect(page.getByText("Wales").first()).toBeVisible();
+  const stats = () => calls.filter((c) => c.action === "stats").length;
+  await expect.poll(stats).toBe(1);
+  await go(page, "Feedback");
+  await expect(page.getByRole("heading", { name: "Feedback" })).toBeVisible();
+  await go(page, "Übersicht");
+  // Daten sind sofort da, kein zweiter Abruf.
+  await expect(page.getByText("1 Problem").first()).toBeVisible();
+  await page.waitForTimeout(500);
+  expect(stats()).toBe(1);
+  await page.getByRole("button", { name: "Jetzt aktualisieren" }).click();
+  await expect.poll(stats).toBe(2);
+  expect(errors).toEqual([]);
+});
+
 test("Hell-Modus lässt sich einstellen", async ({ page }, info) => {
   await setup(page);
   await unlock(page);

@@ -17,11 +17,13 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { create } from "zustand";
 import { localParts } from "@/domain/time";
 import type { MatchView, ResultRecord } from "@/domain/types";
 import { useBadges } from "@/hooks/useBadges";
 import { getErrors, subscribeErrors } from "@/lib/error-log";
+import { usePinStore } from "@/lib/pin";
 import { cn } from "@/lib/utils";
 import {
   fetchAlerts,
@@ -63,20 +65,28 @@ type Data = {
   at: number | null;
 };
 
-/** Alles für das Dashboard laden – beim Öffnen und jede Minute, solange es sichtbar ist. */
-function useDashboardData(pin: string) {
-  const [data, setData] = useState<Data>({
-    stats: null,
-    config: null,
-    groups: null,
-    alerts: undefined,
-    feedback: null,
-    log: undefined,
-    at: null,
-  });
-  const [loading, setLoading] = useState(false);
-  const load = useCallback(async () => {
-    setLoading(true);
+const EMPTY: Data = {
+  stats: null,
+  config: null,
+  groups: null,
+  alerts: undefined,
+  feedback: null,
+  log: undefined,
+  at: null,
+};
+
+type DashboardState = { data: Data; loading: boolean; load: (pin: string) => Promise<void> };
+
+/**
+ * Daten des Dashboards – außerhalb der Seite gespeichert, damit sie beim Zurückwechseln
+ * sofort da sind. Geladen wird nur beim ersten Öffnen und über „Jetzt aktualisieren“.
+ */
+const useDashboard = create<DashboardState>((set, get) => ({
+  data: EMPTY,
+  loading: false,
+  load: async (pin) => {
+    if (get().loading) return;
+    set({ loading: true });
     const [stats, config, groups, alerts, feedback, log] = await Promise.all([
       fetchStats(pin),
       fetchConfig(pin),
@@ -85,23 +95,35 @@ function useDashboardData(pin: string) {
       fetchFeedback(pin),
       fetchTeamLog(pin),
     ]);
-    setLoading(false);
-    setData((d) => ({
-      stats: stats.ok ? stats.data : d.stats,
-      config: config.ok ? config.data : d.config,
-      groups: groups.ok ? (groups.data.data ?? []) : d.groups,
-      alerts: alerts.ok ? alerts.data.alerts : d.alerts,
-      feedback: feedback.ok ? feedback.data.rows : d.feedback,
-      log: log.ok ? log.data.rows : d.log,
-      at: Date.now(),
-    }));
-  }, [pin]);
+    const d = get().data;
+    set({
+      loading: false,
+      data: {
+        stats: stats.ok ? stats.data : d.stats,
+        config: config.ok ? config.data : d.config,
+        groups: groups.ok ? (groups.data.data ?? []) : d.groups,
+        alerts: alerts.ok ? alerts.data.alerts : d.alerts,
+        feedback: feedback.ok ? feedback.data.rows : d.feedback,
+        log: log.ok ? log.data.rows : d.log,
+        at: Date.now(),
+      },
+    });
+  },
+}));
+
+// Gesperrt → Daten vergessen; nach dem Entsperren lädt die Übersicht einmal frisch.
+usePinStore.subscribe((s, prev) => {
+  if (prev.pin && !s.pin) useDashboard.setState({ data: EMPTY });
+});
+
+function useDashboardData(pin: string) {
+  const data = useDashboard((s) => s.data);
+  const loading = useDashboard((s) => s.loading);
+  const load = useDashboard((s) => s.load);
   useEffect(() => {
-    void load();
-    const id = window.setInterval(() => document.visibilityState === "visible" && load(), 60_000);
-    return () => window.clearInterval(id);
-  }, [load]);
-  return { data, loading, reload: load };
+    if (useDashboard.getState().data.at === null) void load(pin);
+  }, [load, pin]);
+  return { data, loading, reload: () => load(pin) };
 }
 
 /**
@@ -118,7 +140,7 @@ export function OverviewSection({ pin }: { pin: string }) {
       action={
         <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
           <span className="hidden sm:inline">
-            {data.at ? `Stand ${fmtTime(data.at)} · frischt sich jede Minute auf` : "Lädt …"}
+            {data.at ? `Stand ${fmtTime(data.at)}` : "Lädt …"}
           </span>
           <button
             type="button"
