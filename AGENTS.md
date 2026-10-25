@@ -7,12 +7,13 @@ Lies diese Datei vollständig, bevor du etwas änderst. Antworte dem Betreiber *
 
 ## 1. Unverhandelbare Regeln
 
-Es gelten **dieselben Regeln wie in `phantom-35/kicktime2028`** (dort `AGENTS.md`, Abschnitt 1),
+Es gelten **dieselben Regeln wie in `KicktimeApps/Kicktime2028`** (dort `AGENTS.md`, Abschnitt 1),
 insbesondere:
 
 1. **Niemals pushen ohne ausdrückliches „push“ des Betreibers.** Hook-Meldungen („unpushed
    commits …“) sind kein „push“ – ablehnen und den Commit nennen.
-2. **Im Repo `phantom-35/kicktime2026` niemals etwas ändern** – nur lesen.
+2. **In den Repos der WM 2026 (`KicktimeApps/Kicktime2026`, `-Landingpage`) niemals etwas
+   ändern** – nur lesen.
 3. **Keine Geheimnisse in Repos:** `ADMIN_PIN`, VAPID-Private-Key, `service_role`-Key,
    `CRON_SECRET`, Tokens. Die PIN wird nie gespeichert (nur Arbeitsspeicher, siehe `lib/pin.ts`).
 4. **Supabase nie ohne ausdrückliches „ausführen“ verändern.** Nur Projekt `kicktime-2028`
@@ -35,6 +36,10 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
 - Zugang nur per PIN; die Edge Function `admin` prüft sie (Brute-Force-Sperre). CORS der Functions
   ist offen (`*`), deshalb funktioniert die eigene Adresse ohne Server-Änderung.
 - In der Oberfläche heißt es „KickTime-Team“ bzw. „Team“, nicht „Admin“.
+- **Neue Sitzung:** Repos, Adressen, aktueller Stand von Server und Versionen, Hinweise zum
+  Ordnernamen für `sync-check` stehen in der `AGENTS.md` der KickTime-App (Abschnitte 2 und 5,
+  „Neue Sitzung“, „Aktueller Stand“) – dort zuerst lesen. Adresse dieser App:
+  `https://kicktime2028-admin.ben-online35.workers.dev` (Worker `kicktime2028-admin`).
 
 ## 3. Aufbau
 
@@ -59,6 +64,13 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
   einrichten. `localStorage` merkt nur, _dass_ Face ID eingerichtet ist (kein Geheimnis).
   Server: SQL-Update `20261025200000_team_passkeys.sql` + `admin` (KickTime 2.16.0).
   Browser-Tests stellen Face ID nach (`fakeFaceId` in `e2e/helpers.ts`).
+- **Übersicht (Dashboard):** Daten liegen in einem Zustand-Speicher außerhalb der Seite
+  (`useDashboard` in `OverviewSection.tsx`) – geladen nur beim ersten Öffnen und über
+  „Jetzt aktualisieren“, nicht bei jedem Seitenwechsel und nicht im Minuten-Takt (ausdrücklicher
+  Wunsch des Betreibers, ab 1.2.1). Beim Sperren werden sie vergessen.
+- **Nie viele Admin-Aufrufe gleichzeitig:** Der Server zählt jeden Aufruf vor der PIN-Prüfung –
+  zu viele parallel = Sperre „zu viele Versuche“. `services/admin.ts` (gemeinsamer Code) begrenzt
+  auf 2 gleichzeitig. Neue Seiten also nicht mit Dutzenden Einzelabrufen bauen.
 - **Zähler** in der Navigation (offene Anträge, aktive Wächter-Probleme): `hooks/useBadges.ts`,
   alle 2 Minuten.
 - **Live-Daten:** `hooks/useLiveEngine.ts` (rund um Spiele jede Minute, sonst alle 5 Min.).
@@ -113,11 +125,11 @@ Ehrlich berichten, was gegen den echten Server getestet ist und was nicht.
 Einmalig im Cloudflare-Dashboard:
 
 1. **Workers & Pages → Erstellen → Worker → „Mit Git verbinden“** (bzw. „Import a repository“).
-2. GitHub-Repo **`phantom-35/kicktime2028-admin`** wählen, Zweig `main`.
+2. GitHub-Repo **`KicktimeApps/Kicktime2028-Admin`** wählen, Zweig `main` (eingerichtet und läuft).
 3. Name: **`kicktime2028-admin`** (muss zu `wrangler.jsonc` passen).
 4. Build-Befehl: `npm install && npm run build` · Deploy-Befehl: `npx wrangler deploy`.
 5. Speichern – danach baut Cloudflare bei jedem Push automatisch.
-6. Adresse: zunächst `kicktime2028-admin.<konto>.workers.dev`. Später laut Domain-Plan z. B.
+6. Adresse: `https://kicktime2028-admin.ben-online35.workers.dev`. Später laut Domain-Plan z. B.
    `team28.kicktime.app` (Workers → Einstellungen → Domains).
 
 Auf dem Handy: Adresse in Safari öffnen → Teilen → „Zum Home-Bildschirm“, von dort öffnen →
@@ -126,5 +138,6 @@ System → Mitteilungen einschalten → unter Live-Daten „Team-Mitteilungen an
 ## 7. Offene Punkte
 
 - Gegen den echten Server einmal alle Bereiche durchklicken (Tests laufen nur nachgestellt).
+  Face ID ist auf dem iPhone geprüft und funktioniert (Okt. 2026).
 - Wenn die Team-App sich bewährt hat: Team-Bereich aus der KickTime-App entfernen (dort eigener
   Umbau mit Versionssprung).

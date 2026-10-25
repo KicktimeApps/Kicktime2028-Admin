@@ -1,7 +1,7 @@
 # KickTime-Team · EM 2028
 
 Eigene Web-App für das KickTime-Team: das Kontrollzentrum der
-[KickTime-App 2028](https://github.com/phantom-35/kicktime2028) – mit allen Funktionen
+[KickTime-App 2028](https://github.com/KicktimeApps/Kicktime2028) – mit allen Funktionen
 des bisherigen Team-Bereichs, schlichter und mit mehr Platz.
 
 - **Übersicht** – Dashboard: Systemstatus, Kennzahlen mit Verlauf, Spieltag mit Quellen-Abgleich,
