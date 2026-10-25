@@ -10,6 +10,7 @@ import type { ThemeMode } from "@/lib/theme";
 import { APP_VERSION } from "@/lib/version";
 import { isBackendConfigured } from "@/services/supabase";
 import { useTeamStore } from "@/store/team-store";
+import { FaceIdCard } from "./FaceIdCard";
 import { ActionButton, Card, Info } from "./shared";
 import { useAction } from "./use-action";
 
@@ -74,6 +75,8 @@ export function SystemSection() {
           </p>
         )}
       </Card>
+
+      <FaceIdCard />
 
       <Card title="Darstellung">
         <Segmented<ThemeMode>

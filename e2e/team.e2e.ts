@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectNoOverflow, setup, unlock } from "./helpers";
+import { expectNoOverflow, fakeFaceId, setup, unlock } from "./helpers";
 
 const SHOTS = process.env.SHOTS;
 
@@ -175,4 +175,57 @@ test("Protokoll zeigt die Team-Aktionen", async ({ page }) => {
   await go(page, "Protokoll");
   await expect(page.getByText("Antrag von Tom angenommen")).toBeVisible();
   await expect(page.getByText(/Gerät …7777/)).toBeVisible();
+});
+
+test("Face ID: mit einem Blick entsperren – danach gilt die Freigabe statt der PIN", async ({
+  page,
+}, info) => {
+  const { calls, errors } = await setup(page);
+  await fakeFaceId(page);
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Mit Face ID entsperren" })).toBeVisible();
+  await shot(page, "15-faceid-sperre", info.project.name);
+  await page.getByRole("button", { name: "Mit Face ID entsperren" }).click();
+  await expect(page.getByRole("heading", { name: "Übersicht" })).toBeVisible();
+  expect(calls.find((c) => c.action === "passkey_login")?.body.response).toBeTruthy();
+  // Alle weiteren Aufrufe schicken die Freigabe statt einer PIN.
+  await expect
+    .poll(() => calls.find((c) => c.action === "stats")?.body.pin)
+    .toBe("s1.Y3JlZA.9999999999999.c2ln");
+  await go(page, "System");
+  await expect(page.getByText("Mit Face ID entsperrt")).toBeVisible();
+  await expect(page.getByText("iPhone · 25.10.")).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
+test("Face ID einrichten nach Entsperren mit PIN", async ({ page }, info) => {
+  const { calls } = await setup(page);
+  await fakeFaceId(page, { hint: false });
+  await page.goto("/");
+  // Noch nicht eingerichtet → nur PIN.
+  await expect(page.getByRole("button", { name: "Mit Face ID entsperren" })).toHaveCount(0);
+  await page.getByLabel("PIN").fill("123456");
+  await page.getByRole("button", { name: "Entsperren" }).click();
+  await expect(page.getByRole("heading", { name: "Übersicht" })).toBeVisible();
+  await go(page, "System");
+  await page.getByRole("button", { name: "Face ID auf diesem Gerät einrichten" }).click();
+  await expect(page.getByText("Face ID ist eingerichtet")).toBeVisible();
+  const reg = calls.find((c) => c.action === "passkey_register")?.body;
+  expect(reg).toMatchObject({ pin: "123456" });
+  expect(String(reg?.label)).toMatch(/·/);
+  await shot(page, "16-faceid-system", info.project.name);
+  // Beim nächsten Öffnen wird Face ID angeboten.
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Mit Face ID entsperren" })).toBeVisible();
+});
+
+test("abgelaufene Face-ID-Freigabe führt zurück zum Sperrbildschirm", async ({ page }) => {
+  await setup(page, { admin: { decide: { error: "Sitzung abgelaufen – bitte neu entsperren" } } });
+  await fakeFaceId(page);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Mit Face ID entsperren" }).click();
+  await expect(page.getByRole("heading", { name: "Übersicht" })).toBeVisible();
+  await go(page, "Anträge");
+  await page.getByRole("button", { name: "Entsperren" }).click();
+  await expect(page.getByRole("button", { name: "Mit Face ID entsperren" })).toBeVisible();
 });

@@ -51,6 +51,14 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
   Server dafür: SQL-Update `20261025180000_team_app.sql` + Edge Function `admin` (KickTime 2.15.0).
 - **PIN:** `lib/pin.ts` – nur im Speicher, Sperre nach 30 Min. ohne Bedienung. Seite neu laden =
   PIN neu eingeben (gewollt). Navigation deshalb immer über Links, nie `location.href`.
+- **Face ID (ab 1.2.0, nur Team-App):** Passkeys (`services/passkey.ts`, Paket
+  `@simplewebauthn/browser`). Einrichten nur nach Entsperren mit PIN (System → Face ID).
+  Entsperren per Face ID → Server gibt Freigabe `s1.<passkey>.<ablauf>.<signatur>` (4 Std.,
+  nur im Speicher) – sie wird statt der PIN als `pin` mitgeschickt. Abgelaufen/Gerät entfernt
+  → `use-action` sperrt die App. Passkeys gelten je Adresse (rpId) – nach Domain-Umzug neu
+  einrichten. `localStorage` merkt nur, _dass_ Face ID eingerichtet ist (kein Geheimnis).
+  Server: SQL-Update `20261025200000_team_passkeys.sql` + `admin` (KickTime 2.16.0).
+  Browser-Tests stellen Face ID nach (`fakeFaceId` in `e2e/helpers.ts`).
 - **Zähler** in der Navigation (offene Anträge, aktive Wächter-Probleme): `hooks/useBadges.ts`,
   alle 2 Minuten.
 - **Live-Daten:** `hooks/useLiveEngine.ts` (rund um Spiele jede Minute, sonst alle 5 Min.).

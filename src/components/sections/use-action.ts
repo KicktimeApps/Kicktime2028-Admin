@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
+import { usePinStore } from "@/lib/pin";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -20,6 +21,12 @@ export function useAction() {
       const res = await fn();
       setBusy(null);
       if (!res.ok) {
+        // Face-ID-Freigabe abgelaufen oder Gerät entfernt → zurück zum Sperrbildschirm.
+        if (/Sitzung abgelaufen/.test(res.error)) {
+          usePinStore.getState().lock();
+          toast("Bitte neu entsperren", { description: res.error });
+          return null;
+        }
         haptics.warn();
         toast.error("Fehler", { description: res.error });
         return null;

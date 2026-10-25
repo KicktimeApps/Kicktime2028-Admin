@@ -248,6 +248,43 @@ export const ADMIN: Record<string, unknown> = {
       },
     ],
   },
+  passkey_login_options: {
+    available: true,
+    options: {
+      challenge: "Y2hhbGxlbmdl",
+      allowCredentials: [{ id: "Y3JlZA", type: "public-key", transports: ["internal"] }],
+      timeout: 60000,
+      userVerification: "required",
+    },
+  },
+  passkey_login: { ok: true, token: "s1.Y3JlZA.9999999999999.c2ln", expiresAt: 9999999999999 },
+  passkey_register_options: {
+    ok: true,
+    options: {
+      challenge: "cmVnLWNoYWxsZW5nZQ",
+      rp: { name: "KickTime-Team", id: "127.0.0.1" },
+      user: { id: "a2lja3RpbWUtdGVhbQ", name: "kicktime-team", displayName: "KickTime-Team" },
+      pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+      timeout: 60000,
+      attestation: "none",
+      excludeCredentials: [],
+      authenticatorSelection: { residentKey: "preferred", userVerification: "required" },
+    },
+  },
+  passkey_register: { ok: true, id: "Y3JlZA" },
+  passkey_list: {
+    ok: true,
+    data: [
+      {
+        id: "Y3JlZA",
+        label: "iPhone · 25.10.",
+        rp_id: "127.0.0.1",
+        created_at: iso(600),
+        last_used_at: iso(5),
+        here: true,
+      },
+    ],
+  },
   team_device: {
     registered: false,
     count: 1,
@@ -367,4 +404,40 @@ export async function expectNoOverflow(page: Page) {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(over).toBeLessThanOrEqual(0);
+}
+
+/**
+ * Face ID im Test: Statt eines echten Geräts liefert navigator.credentials
+ * eine nachgestellte Antwort (Prüfen übernimmt im Test der nachgestellte Server).
+ */
+export async function fakeFaceId(page: Page, opts: { hint?: boolean } = {}) {
+  await page.addInitScript((hint) => {
+    if (hint) localStorage.setItem("kicktime-2028-team.faceid", "1");
+    const buf = (s: string) => new TextEncoder().encode(s).buffer;
+    const cred = (response: Record<string, unknown>) => ({
+      id: "Y3JlZA",
+      rawId: buf("cred"),
+      type: "public-key",
+      authenticatorAttachment: "platform",
+      response,
+      getClientExtensionResults: () => ({}),
+    });
+    Object.defineProperty(navigator, "credentials", {
+      value: {
+        get: async () =>
+          cred({
+            clientDataJSON: buf('{"type":"webauthn.get"}'),
+            authenticatorData: buf("auth"),
+            signature: buf("sig"),
+            userHandle: buf("kicktime-team"),
+          }),
+        create: async () =>
+          cred({
+            clientDataJSON: buf('{"type":"webauthn.create"}'),
+            attestationObject: buf("att"),
+            getTransports: () => ["internal"],
+          }),
+      },
+    });
+  }, opts.hint ?? true);
 }
