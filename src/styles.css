@@ -1,0 +1,410 @@
+@import "@fontsource-variable/inter";
+@import "@fontsource/barlow-condensed/500.css";
+@import "@fontsource/barlow-condensed/600.css";
+@import "@fontsource/barlow-condensed/700.css";
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * KickTime 2028 – Design-Tokens
+ * „Flutlicht“: tiefes Nachtblau, klares Flutlicht-Grün als Primärfarbe,
+ * Pokal-Gold für Favoriten & Titel, Signalrot nur für LIVE.
+ */
+
+@theme inline {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Barlow Condensed", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: calc(var(--radius) - 2px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 4px);
+  --radius-3xl: calc(var(--radius) + 10px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-live: var(--live);
+  --color-elevated: var(--elevated);
+  --color-subtle: var(--subtle);
+}
+
+:root,
+.dark {
+  --radius: 1rem;
+  --background: oklch(0.155 0.03 265);
+  --foreground: oklch(0.97 0.005 260);
+  --card: oklch(0.2 0.035 265);
+  --card-foreground: oklch(0.97 0.005 260);
+  --elevated: oklch(0.24 0.04 265);
+  --subtle: oklch(0.18 0.03 265);
+  --popover: oklch(0.21 0.035 265);
+  --popover-foreground: oklch(0.97 0.005 260);
+  --primary: oklch(0.82 0.17 155);
+  --primary-foreground: oklch(0.18 0.04 200);
+  --secondary: oklch(0.27 0.04 265);
+  --secondary-foreground: oklch(0.95 0.01 260);
+  --muted: oklch(0.25 0.035 265);
+  --muted-foreground: oklch(0.72 0.03 262);
+  --accent: oklch(0.29 0.045 265);
+  --accent-foreground: oklch(0.97 0.005 260);
+  --destructive: oklch(0.66 0.21 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --live: oklch(0.68 0.22 25);
+  --gold: oklch(0.84 0.14 85);
+  --gold-foreground: oklch(0.22 0.04 70);
+  --border: oklch(0.3 0.035 265);
+  --input: oklch(0.32 0.04 265);
+  --ring: oklch(0.82 0.17 155);
+  color-scheme: dark;
+}
+
+.light {
+  --background: oklch(0.975 0.006 260);
+  --foreground: oklch(0.2 0.035 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.2 0.035 265);
+  --elevated: oklch(0.99 0.003 260);
+  --subtle: oklch(0.955 0.008 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.2 0.035 265);
+  --primary: oklch(0.47 0.14 155);
+  --primary-foreground: oklch(0.99 0.005 155);
+  --secondary: oklch(0.94 0.01 260);
+  --secondary-foreground: oklch(0.22 0.035 265);
+  --muted: oklch(0.95 0.008 260);
+  --muted-foreground: oklch(0.47 0.03 262);
+  --accent: oklch(0.93 0.012 260);
+  --accent-foreground: oklch(0.2 0.035 265);
+  --destructive: oklch(0.57 0.21 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --live: oklch(0.52 0.21 25);
+  --gold: oklch(0.5 0.12 65);
+  --gold-foreground: oklch(0.99 0.01 85);
+  --border: oklch(0.9 0.012 260);
+  --input: oklch(0.88 0.015 260);
+  --ring: oklch(0.47 0.14 155);
+  color-scheme: light;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  html,
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    font-feature-settings: "cv11", "ss01";
+    min-height: 100dvh;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+  button {
+    cursor: pointer;
+  }
+  /* Am Seitenrand federt die Seite natürlich aus (wie überall auf dem iPhone) –
+     der Hintergrund hat dabei die App-Farbe. In Fenstern mit eigenem Scrollbereich
+     federt nur das Fenster, die Seite dahinter bleibt stehen. Außerdem kein
+     versehentliches Markieren von Knöpfen. */
+  :where(.overflow-y-auto, .overflow-auto) {
+    overscroll-behavior-y: contain;
+  }
+  :where(button, a[href], [role="button"], [role="tab"], [role="switch"], nav, label) {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  img {
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Tor-Moment: Karte bzw. Zeile leuchtet einmal grün auf (useGoalFlash.ts),
+   die neue Ziffer rutscht von unten herein (GoalScore.tsx). */
+@keyframes score-flip {
+  from {
+    transform: translateY(70%);
+    opacity: 0;
+  }
+}
+@keyframes goal-flash {
+  0% {
+    box-shadow: inset 0 0 0 999px color-mix(in oklab, var(--primary) 0%, transparent);
+  }
+  20% {
+    box-shadow: inset 0 0 0 999px color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+  100% {
+    box-shadow: inset 0 0 0 999px color-mix(in oklab, var(--primary) 0%, transparent);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .goal-flash {
+    animation: goal-flash 1.8s ease-out;
+  }
+  .score-flip {
+    animation: score-flip 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+/* Seitenwechsel: kurz überblenden (siehe defaultViewTransition in router.tsx). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.2s;
+  animation-timing-function: ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+@layer components {
+  /* Dezentes Flutlicht im Seitenhintergrund (nur Dark Mode). */
+  .app-backdrop {
+    background:
+      radial-gradient(
+        1200px 500px at 50% -200px,
+        color-mix(in oklab, var(--primary) 9%, transparent),
+        transparent 70%
+      ),
+      var(--background);
+  }
+  .light .app-backdrop {
+    background: var(--background);
+  }
+
+  .surface {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-2xl);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: 0.01em;
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Höhe des festen Kopfbereichs – für weitere klebende Leisten (Spielplan).
+     Am Shell-Element definiert, damit die Banner-Höhe mit einfließt. */
+  .app-shell {
+    --demo-banner-h: 0px;
+    --top-offset: calc(env(safe-area-inset-top) + 3.5rem + var(--demo-banner-h));
+  }
+  .app-shell.has-demo-banner {
+    --demo-banner-h: 2.25rem;
+  }
+  @media (min-width: 768px) {
+    .app-shell {
+      --top-offset: var(--demo-banner-h);
+    }
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
+  }
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+.live-dot {
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+.gold-shimmer {
+  background-image: linear-gradient(
+    110deg,
+    transparent 30%,
+    color-mix(in oklab, var(--gold) 30%, transparent) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot,
+  .gold-shimmer {
+    animation: none;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+/* Öffnungsanimation (SplashScreen) – reines CSS, läuft schon vor dem Laden von JavaScript */
+@keyframes splash-aura {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.1);
+  }
+}
+@keyframes splash-logo {
+  from {
+    opacity: 0;
+    transform: scale(0.8) rotate(-20deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes splash-text {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+/* Schnell auf ~90 % (meist ist nach gut einer Sekunde alles geladen), dann langsam voll. */
+@keyframes splash-bar {
+  0% {
+    width: 0%;
+  }
+  45% {
+    width: 88%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+.splash-aura {
+  animation: splash-aura 2.4s ease-in-out infinite;
+}
+.splash-aura-2 {
+  animation-duration: 3s;
+  animation-delay: 0.4s;
+  opacity: 0.25;
+}
+.splash-logo {
+  animation: splash-logo 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.splash-text {
+  animation: splash-text 0.7s ease-out 0.35s both;
+}
+.splash-bar {
+  animation: splash-bar 2.4s ease-out both;
+}
+
+/* iOS zoomt beim Antippen in Eingabefelder mit Schrift unter 16 px hinein und
+   bleibt gezoomt. Bewusst außerhalb der Layer, damit es die Utilities schlägt. */
+@media (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: max(16px, 1em);
+  }
+}
+
+/* Inhalt gleitet beim Start sanft herein (nur der Inhaltsbereich, damit
+   Kopfzeile und Navigation sofort an ihrem Platz stehen). */
+@keyframes app-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.app-rise {
+  animation: app-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .app-rise {
+    animation: none;
+  }
+}
+
+/* „Große Schrift“: alles gleichmäßig größer. zoom statt transform, damit
+   Layout und fest platzierte Leisten korrekt bleiben. */
+html.text-large body {
+  zoom: 1.15;
+}
+/* Volle Bildschirmhöhe trotz Zoom nicht überschreiten. */
+html.text-large .min-h-dvh {
+  min-height: calc(100dvh / 1.15);
+}
+html.text-large .h-dvh {
+  height: calc(100dvh / 1.15);
+}
