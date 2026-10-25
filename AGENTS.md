@@ -26,7 +26,7 @@ insbesondere:
 ## 2. Was diese App ist
 
 Eigenständige Web-App nur für das KickTime-Team: das Kontrollzentrum der KickTime-App 2028
-(bisher der versteckte Team-Bereich dort; der bleibt vorerst parallel bestehen). Kein eigener
+(früher ein versteckter Team-Bereich dort – seit KickTime 2.18.0 entfernt, alles läuft hier). Kein eigener
 Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`admin`,
 `live-scores`) wie die KickTime-App.
 
@@ -142,5 +142,3 @@ System → Mitteilungen einschalten → unter Live-Daten „Team-Mitteilungen an
 
 - Gegen den echten Server einmal alle Bereiche durchklicken (Tests laufen nur nachgestellt).
   Face ID ist auf dem iPhone geprüft und funktioniert (Okt. 2026).
-- Wenn die Team-App sich bewährt hat: Team-Bereich aus der KickTime-App entfernen (dort eigener
-  Umbau mit Versionssprung).
