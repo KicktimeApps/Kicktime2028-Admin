@@ -1,6 +1,7 @@
 import { Clock, Database, FlaskConical, Save, Trash2, TriangleAlert, Zap } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import { Switch } from "@/components/ui/switch";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { cn } from "@/lib/utils";
 import {
   clearLiveCache,
@@ -34,17 +35,18 @@ const CACHE_LABEL: Record<string, string> = {
 export function LiveSection({ pin }: { pin: string }) {
   const live = useMatchStore((s) => s.live);
   const { busy, run } = useAction();
-  const [config, setConfig] = useState<AdminConfig | null>(null);
-  const [form, setForm] = useState({
+  // Alles bleibt über Seitenwechsel erhalten (auch ein angefangener Entwurf).
+  const [config, setConfig] = useCachedState<AdminConfig | null>("live.config", null);
+  const [form, setForm] = useCachedState("live.form", {
     league: "",
     season: "",
     suffix: "",
     paused: false,
     backup: ESPN_DEFAULT,
   });
-  const [test, setTest] = useState<SourceTest | null>(null);
+  const [test, setTest] = useCachedState<SourceTest | null>("live.test", null);
   // Eigener Schalter-Zustand, damit das Feld beim Leeren nicht verschwindet.
-  const [espnOn, setEspnOn] = useState(true);
+  const [espnOn, setEspnOn] = useCachedState("live.espnOn", true);
 
   const load = useCallback(async () => {
     const data = await run("config", () => fetchConfig(pin));
@@ -59,23 +61,22 @@ export function LiveSection({ pin }: { pin: string }) {
       backup: src.backup ?? ESPN_DEFAULT,
     });
     setEspnOn((src.backup ?? ESPN_DEFAULT) !== "");
-  }, [pin, run]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, run, setConfig, setForm, setEspnOn]);
+  useLoadOnce("live.config", load);
 
   // Tipp-Sperre des Servers mit den Anstoßzeiten der App vergleichen.
   const matches = useMatchStore((s) => s.tournament.matches);
-  const [serverFx, setServerFx] = useState<ServerFixture[] | "missing" | null>(null);
+  const [serverFx, setServerFx] = useCachedState<ServerFixture[] | "missing" | null>(
+    "live.fixtures",
+    null,
+  );
   const loadFixtures = useCallback(async () => {
     const res = await fetchServerFixtures(pin);
     if (res.ok) setServerFx(Array.isArray(res.data.rows) ? res.data.rows : "missing");
     // Edge Function admin noch ohne „fixtures_list“ (vor KickTime 2.18.0).
     else if (/Unbekannte Aktion/.test(res.error)) setServerFx("missing");
-  }, [pin]);
-  useEffect(() => {
-    void loadFixtures();
-  }, [loadFixtures]);
+  }, [pin, setServerFx]);
+  useLoadOnce("live.fixtures", loadFixtures);
   const diffs = Array.isArray(serverFx) ? fixtureDiffs(matches, serverFx) : null;
 
   const url = `https://api.openligadb.de/getmatchdata/${form.league || "…"}/${form.season || "…"}${form.suffix ? `/${form.suffix}` : ""}`;
@@ -93,7 +94,8 @@ export function LiveSection({ pin }: { pin: string }) {
     run(
       "reload",
       async () => {
-        await refreshLiveData({ force: true });
+        // Von Hand: alles auf dieser Seite neu laden.
+        await Promise.all([refreshLiveData({ force: true }), load(), loadFixtures()]);
         return { ok: true as const, data: null };
       },
       "Daten neu geladen",

@@ -1,8 +1,9 @@
 import { RefreshCw, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Segmented } from "@/components/common/Segmented";
 import { cn } from "@/lib/utils";
 import { deleteFeedback, fetchFeedback, type FeedbackRow } from "@/services/admin";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { ConfirmButton } from "./shared";
 import { useAction } from "./use-action";
 
@@ -18,15 +19,13 @@ type Filter = "all" | "idee" | "fehler" | "lob" | "sonstiges";
 /** Rückmeldungen aus der App – nach Art filtern, einzeln oder alle löschen. */
 export function FeedbackSection({ pin }: { pin: string }) {
   const { busy, run } = useAction();
-  const [rows, setRows] = useState<FeedbackRow[] | null>(null);
+  const [rows, setRows] = useCachedState<FeedbackRow[] | null>("feedback", null);
   const [filter, setFilter] = useState<Filter>("all");
   const load = useCallback(async () => {
     const res = await run("load", () => fetchFeedback(pin));
     if (res) setRows(res.rows);
-  }, [pin, run]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, run, setRows]);
+  useLoadOnce("feedback", load);
 
   const count = (f: Filter) =>
     (rows ?? []).filter((r) => f === "all" || (r.category ?? "sonstiges") === f).length;

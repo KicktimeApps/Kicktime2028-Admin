@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Flag } from "@/components/team/Flag";
 import { teamDisplay } from "@/domain/labels";
 import { cn } from "@/lib/utils";
@@ -39,23 +39,22 @@ import {
   type AdminGroup,
   type AdminMember,
 } from "@/services/admin";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { ActionButton, Card, ConfirmButton, Info } from "./shared";
 import { fmtTime, useAction } from "./use-action";
 
 export function GroupsSection({ pin }: { pin: string }) {
   const qc = useQueryClient();
   const { busy, run } = useAction();
-  const [groups, setGroups] = useState<AdminGroup[] | null>(null);
-  const [open, setOpen] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
+  const [groups, setGroups] = useCachedState<AdminGroup[] | null>("groups", null);
+  const [open, setOpen] = useCachedState<string | null>("groups.open", null);
+  const [query, setQuery] = useCachedState("groups.query", "");
 
   const load = useCallback(async () => {
     const res = await run("load", () => fetchGroups(pin));
     if (res) setGroups(res.data ?? []);
-  }, [pin, run]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, run, setGroups]);
+  useLoadOnce("groups", load);
 
   // Eigene Ansichten der App (Mitgliederlisten, Tabellen) danach neu laden.
   const changed = async () => {
@@ -170,14 +169,12 @@ function GroupDetail({
   onChanged: () => Promise<void>;
 }) {
   const { busy, run } = useAction();
-  const [members, setMembers] = useState<AdminMember[] | null>(null);
+  const [members, setMembers] = useCachedState<AdminMember[] | null>(`group:${group.id}`, null);
   const load = useCallback(async () => {
     const res = await run("load", () => fetchGroup(pin, group.id));
     if (res) setMembers(res.data ?? []);
-  }, [pin, group.id, run]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, group.id, run, setMembers]);
+  useLoadOnce(`group:${group.id}`, load);
 
   const act = async (key: string, fn: () => ReturnType<typeof removeMember>, msg: string) => {
     if (await run(key, fn, msg)) {

@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowLeft, Crown, RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Flag } from "@/components/team/Flag";
 import { teamDisplay } from "@/domain/labels";
 import { buildBoard } from "@/domain/predictions";
@@ -8,6 +8,7 @@ import { tournamentWinner } from "@/domain/status";
 import { cn } from "@/lib/utils";
 import { fetchGroupBoard, type GroupBoard } from "@/services/admin";
 import { useTournament } from "@/store/match-store";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { Info } from "./shared";
 import { useAction } from "./use-action";
 
@@ -19,8 +20,8 @@ import { useAction } from "./use-action";
 export function GroupBoardSection({ pin, groupId }: { pin: string; groupId: string }) {
   const tournament = useTournament();
   const { busy, run } = useAction();
-  const [board, setBoard] = useState<GroupBoard | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [board, setBoard] = useCachedState<GroupBoard | null>(`board:${groupId}`, null);
+  const [error, setError] = useCachedState<string | null>(`board:${groupId}.error`, null);
   const load = useCallback(async () => {
     const res = await run("load", async () => {
       const r = await fetchGroupBoard(pin, groupId);
@@ -31,10 +32,8 @@ export function GroupBoardSection({ pin, groupId }: { pin: string; groupId: stri
       setBoard(res.data);
       setError(null);
     }
-  }, [pin, groupId, run]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, groupId, run, setBoard, setError]);
+  useLoadOnce(`board:${groupId}`, load);
 
   const winner = tournamentWinner(tournament);
   const rows = useMemo(

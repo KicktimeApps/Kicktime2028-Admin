@@ -1,5 +1,5 @@
 import { Check, RefreshCw, Undo2, X } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   decideRequest,
@@ -9,6 +9,7 @@ import {
   type GlobalBan,
   type UnbanRequest,
 } from "@/services/admin";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { ActionButton, Card, ConfirmButton } from "./shared";
 import { TeamDeviceRow } from "./TeamDevice";
 import { fmtTime, useAction } from "./use-action";
@@ -16,17 +17,15 @@ import { fmtTime, useAction } from "./use-action";
 /** Entsperrungsanträge, „überall gesperrt“ und Mitteilungen an dieses Gerät. */
 export function RequestsSection({ pin, onChange }: { pin: string; onChange?: () => void }) {
   const { busy, run } = useAction();
-  const [requests, setRequests] = useState<UnbanRequest[] | null>(null);
-  const [bans, setBans] = useState<GlobalBan[] | null>(null);
+  const [requests, setRequests] = useCachedState<UnbanRequest[] | null>("requests", null);
+  const [bans, setBans] = useCachedState<GlobalBan[] | null>("requests.bans", null);
 
   const load = useCallback(async () => {
     const [r, b] = await Promise.all([fetchRequests(pin), fetchGlobalBans(pin)]);
     if (r.ok) setRequests(r.data.data ?? []);
     if (b.ok) setBans(b.data.data ?? []);
-  }, [pin]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, setBans, setRequests]);
+  useLoadOnce("requests", load);
   const changed = async () => {
     await load();
     onChange?.();

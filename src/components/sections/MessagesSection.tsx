@@ -1,10 +1,11 @@
 import { BellRing, Megaphone, Send, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Segmented } from "@/components/common/Segmented";
 import { getDeviceId } from "@/lib/device-id";
 import { fetchConfig, fetchStats, saveAnnouncement, sendBroadcast } from "@/services/admin";
 import { refreshAnnouncement, type Announcement } from "@/services/announcement";
 import { useTeamStore } from "@/store/team-store";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { ActionButton, Card, ConfirmButton } from "./shared";
 import { fmtTime, useAction } from "./use-action";
 
@@ -31,11 +32,12 @@ const toLocalInput = (iso: string | null) => {
 export function MessagesSection({ pin }: { pin: string }) {
   const { busy, run } = useAction();
   const pushEnabled = useTeamStore((s) => s.pushEnabled);
-  const [current, setCurrent] = useState<Announcement | null>(null);
-  const [text, setText] = useState("");
-  const [tone, setTone] = useState<Announcement["tone"]>("info");
-  const [until, setUntil] = useState("");
-  const [subs, setSubs] = useState<number | null>(null);
+  const [current, setCurrent] = useCachedState<Announcement | null>("messages.current", null);
+  // Entwurf bleibt beim Seitenwechsel erhalten.
+  const [text, setText] = useCachedState("messages.text", "");
+  const [tone, setTone] = useCachedState<Announcement["tone"]>("messages.tone", "info");
+  const [until, setUntil] = useCachedState("messages.until", "");
+  const [subs, setSubs] = useCachedState<number | null>("messages.subs", null);
   const [push, setPush] = useState({ title: "", body: "", url: "/" });
 
   const load = useCallback(async () => {
@@ -48,10 +50,8 @@ export function MessagesSection({ pin }: { pin: string }) {
       setUntil(toLocalInput(a?.until ?? null));
     }
     if (stats.ok) setSubs(stats.data.push?.subscriptions ?? null);
-  }, [pin]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, setCurrent, setSubs, setText, setTone, setUntil]);
+  useLoadOnce("messages", load);
 
   const saveBanner = async (remove = false) => {
     const ok = await run(

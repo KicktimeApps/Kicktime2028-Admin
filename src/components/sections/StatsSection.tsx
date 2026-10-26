@@ -1,9 +1,10 @@
 import { RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Flag } from "@/components/team/Flag";
 import { teamDisplay } from "@/domain/labels";
 import { cn } from "@/lib/utils";
 import { fetchStats, type Stats, type StatsExt } from "@/services/admin";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { Card, Info } from "./shared";
 
 const PLATFORM: Record<string, string> = {
@@ -29,17 +30,15 @@ const pct = (part: number, whole: number) =>
   whole > 0 ? `${Math.round((part / whole) * 100)} %` : "–";
 
 export function StatsSection({ pin }: { pin: string }) {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useCachedState<Stats | null>("stats", null);
   const [loading, setLoading] = useState(false);
   const load = useCallback(async () => {
     setLoading(true);
     const s = await fetchStats(pin);
     setLoading(false);
     if (s.ok) setStats(s.data);
-  }, [pin]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, setStats]);
+  useLoadOnce("stats", load);
 
   const ext = stats?.ext ?? null;
 

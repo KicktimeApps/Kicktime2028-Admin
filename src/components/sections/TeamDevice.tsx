@@ -1,5 +1,6 @@
 import { BellRing, CircleCheck, CircleX, TriangleAlert } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { Switch } from "@/components/ui/switch";
 import { getDeviceId } from "@/lib/device-id";
 import { enablePush } from "@/lib/push";
@@ -16,11 +17,17 @@ import { fmtTime, useAction } from "./use-action";
 export function TeamDeviceRow({ pin, reloadKey = 0 }: { pin: string; reloadKey?: number }) {
   const pushEnabled = useTeamStore((s) => s.pushEnabled);
   const { busy, run } = useAction();
-  const [state, setState] = useState<TeamDeviceState | null>(null);
+  const [state, setState] = useCachedState<TeamDeviceState | null>("teamdevice", null);
   const device = getDeviceId();
+  const load = useCallback(async () => {
+    const r = await teamDevice(pin, device, "");
+    if (r.ok) setState(r.data);
+  }, [pin, device, setState]);
+  // Einmal beim ersten Öffnen, danach nur, wenn die Wächter-Karte neu lädt.
+  useLoadOnce("teamdevice", load);
   useEffect(() => {
-    void teamDevice(pin, device, "").then((r) => r.ok && setState(r.data));
-  }, [pin, device, reloadKey]);
+    if (reloadKey > 0) void load();
+  }, [reloadKey, load]);
   const set = async (mode: "on" | "off" | "only", msg: string) => {
     const res = await run("device", () => teamDevice(pin, device, mode), msg);
     if (res) setState(res);

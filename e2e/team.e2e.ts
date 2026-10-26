@@ -266,3 +266,38 @@ test("Live-Daten: abweichende Tipp-Sperre wird gezeigt und lässt sich abgleiche
   // Danach wird neu verglichen.
   await expect.poll(lists).toBe(before + 1);
 });
+
+test("Alle Bereiche laden nur beim ersten Öffnen – danach nur auf Knopfdruck", async ({ page }) => {
+  const { calls, errors } = await setup(page);
+  await unlock(page);
+  const count = (action: string) => calls.filter((c) => c.action === action).length;
+  // Bereich → Aktion, die er beim Öffnen lädt.
+  const areas: [string, string][] = [
+    ["Tipprunden", "groups"],
+    ["Statistik", "stats"],
+    ["Feedback", "feedback"],
+    ["Protokoll", "team_log"],
+    ["Anträge", "requests"],
+    ["Live-Daten", "alerts"],
+  ];
+  // Erster Durchgang: jeder Bereich lädt (einmal).
+  const first: Record<string, number> = {};
+  for (const [label, action] of areas) {
+    const before = count(action);
+    await go(page, label);
+    await expect.poll(() => count(action)).toBeGreaterThan(before);
+    await page.waitForTimeout(300);
+    first[action] = count(action);
+  }
+  // Zweiter Durchgang: Hin- und Herwechseln lädt nichts mehr.
+  for (const [label] of areas) {
+    await go(page, label);
+    await page.waitForTimeout(300);
+  }
+  for (const [, action] of areas) expect(count(action), action).toBe(first[action]);
+  // Aktualisieren lädt von Hand neu.
+  await go(page, "Tipprunden");
+  await page.getByRole("button", { name: "Aktualisieren" }).click();
+  await expect.poll(() => count("groups")).toBe(first.groups + 1);
+  expect(errors).toEqual([]);
+});

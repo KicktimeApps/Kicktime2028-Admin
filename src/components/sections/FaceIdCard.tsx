@@ -1,5 +1,5 @@
 import { ScanFace, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { haptics } from "@/lib/haptics";
 import { usePin } from "@/lib/pin";
@@ -10,6 +10,7 @@ import {
   registerFaceId,
   type TeamPasskey,
 } from "@/services/passkey";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { ActionButton, Card, ConfirmButton } from "./shared";
 import { fmtTime, useAction } from "./use-action";
 
@@ -22,15 +23,13 @@ export function FaceIdCard() {
   const pin = usePin();
   const viaFaceId = pin.startsWith("s1.");
   const { busy, run } = useAction();
-  const [list, setList] = useState<TeamPasskey[] | null | undefined>(undefined);
+  const [list, setList] = useCachedState<TeamPasskey[] | null | undefined>("passkeys", undefined);
   const [registering, setRegistering] = useState(false);
   const load = useCallback(async () => {
     const res = await listPasskeys(pin);
     if (res.ok) setList(res.data.data);
-  }, [pin]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, setList]);
+  useLoadOnce("passkeys", load);
 
   const register = async () => {
     setRegistering(true);

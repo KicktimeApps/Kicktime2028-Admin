@@ -11,6 +11,7 @@ import {
   type PersonHit,
   type PersonMembership,
 } from "@/services/admin";
+import { useCachedState } from "@/lib/page-cache";
 import { ActionButton, ConfirmButton } from "./shared";
 import { fmtTime, useAction } from "./use-action";
 
@@ -28,9 +29,9 @@ const STATUS_LABEL = { open: "offen", accepted: "angenommen", rejected: "abgeleh
  */
 export function PersonsSection({ pin }: { pin: string }) {
   const { busy, run } = useAction();
-  const [query, setQuery] = useState("");
-  const [hits, setHits] = useState<PersonHit[] | null>(null);
-  const [searched, setSearched] = useState("");
+  const [query, setQuery] = useCachedState("persons.query", "");
+  const [hits, setHits] = useCachedState<PersonHit[] | null>("persons.hits", null);
+  const [searched, setSearched] = useCachedState("persons.searched", "");
   const latest = useRef("");
 
   const search = useCallback(
@@ -47,14 +48,16 @@ export function PersonsSection({ pin }: { pin: string }) {
         setSearched(q.trim());
       }
     },
-    [pin, run],
+    [pin, run, setHits, setSearched],
   );
 
-  // Beim Tippen kurz warten, dann suchen.
+  // Beim Tippen kurz warten, dann suchen – nicht erneut, wenn die Suche beim
+  // Zurückwechseln schon da ist.
   useEffect(() => {
+    if (hits && query.trim() === searched) return;
     const t = window.setTimeout(() => void search(query), 400);
     return () => window.clearTimeout(t);
-  }, [query, search]);
+  }, [query, search, hits, searched]);
 
   return (
     <div className="space-y-3 text-[13.5px]">

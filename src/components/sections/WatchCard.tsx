@@ -2,6 +2,7 @@ import { BellRing, RefreshCw } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { fetchAlerts, sendAlertTest, type WatchAlert } from "@/services/admin";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { ActionButton, Card } from "./shared";
 import { TeamDeviceRow } from "./TeamDevice";
 import { fmtTime, useAction } from "./use-action";
@@ -13,17 +14,19 @@ import { fmtTime, useAction } from "./use-action";
  */
 export function WatchCard({ pin }: { pin: string }) {
   const { busy, run } = useAction();
-  const [alerts, setAlerts] = useState<WatchAlert[] | null | undefined>(undefined);
+  const [alerts, setAlerts] = useCachedState<WatchAlert[] | null | undefined>("alerts", undefined);
   // Geräte-Status (letzte Zustellung) mit neu laden.
   const [reloadKey, setReloadKey] = useState(0);
   const load = useCallback(async () => {
-    setReloadKey((k) => k + 1);
     const data = await run("alerts", () => fetchAlerts(pin));
     if (data) setAlerts(data.alerts);
-  }, [pin, run]);
-  useEffect(() => {
+  }, [pin, run, setAlerts]);
+  useLoadOnce("alerts", load);
+  /** Von Hand neu laden – samt Zustellung der Team-Geräte. */
+  const refresh = () => {
+    setReloadKey((k) => k + 1);
     void load();
-  }, [load]);
+  };
   // Nach einem Test: Der Server verschickt im nächsten Lauf (≤ 1 Minute) –
   // danach die Zustellung neu abfragen.
   const later = useRef(0);
@@ -39,7 +42,7 @@ export function WatchCard({ pin }: { pin: string }) {
       action={
         <button
           type="button"
-          onClick={load}
+          onClick={refresh}
           aria-label="Neu laden"
           className="inline-flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground hover:text-foreground"
         >

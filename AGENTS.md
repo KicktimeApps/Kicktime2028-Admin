@@ -64,10 +64,14 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
   einrichten. `localStorage` merkt nur, _dass_ Face ID eingerichtet ist (kein Geheimnis).
   Server: SQL-Update `20261025200000_team_passkeys.sql` + `admin` (KickTime 2.16.0).
   Browser-Tests stellen Face ID nach (`fakeFaceId` in `e2e/helpers.ts`).
-- **Übersicht (Dashboard):** Daten liegen in einem Zustand-Speicher außerhalb der Seite
-  (`useDashboard` in `OverviewSection.tsx`) – geladen nur beim ersten Öffnen und über
-  „Jetzt aktualisieren“, nicht bei jedem Seitenwechsel und nicht im Minuten-Takt (ausdrücklicher
-  Wunsch des Betreibers, ab 1.2.1). Beim Sperren werden sie vergessen.
+- **Laden nur einmal (Wunsch des Betreibers):** Kein Bereich lädt beim Seitenwechsel neu.
+  Übersicht: `useDashboard` in `OverviewSection.tsx` (ab 1.2.1); alle anderen Bereiche (ab 1.3.1):
+  `lib/page-cache.ts` – `useCachedState(key, …)` statt `useState` für geladene Daten (auch
+  Entwürfe, Suchen, aufgeklappte Runden), `useLoadOnce(key, load)` statt `useEffect`. Neu
+  geladen wird nur über „Aktualisieren“/„Sofort neu laden“ oder nach eigenen Änderungen; beim
+  Sperren wird alles vergessen. Neue Bereiche genauso bauen (Browser-Test „Alle Bereiche laden
+  nur beim ersten Öffnen“). Im Hintergrund laufen nur die Zähler der Navigation (2 Min.) und
+  die Live-Spielstände.
 - **Nie viele Admin-Aufrufe gleichzeitig:** Der Server zählt jeden Aufruf vor der PIN-Prüfung –
   zu viele parallel = Sperre „zu viele Versuche“. `services/admin.ts` (gemeinsamer Code) begrenzt
   auf 2 gleichzeitig. Neue Seiten also nicht mit Dutzenden Einzelabrufen bauen.

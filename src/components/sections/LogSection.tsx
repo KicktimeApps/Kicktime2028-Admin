@@ -1,22 +1,21 @@
 import { RefreshCw } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { getDeviceId } from "@/lib/device-id";
 import { cn } from "@/lib/utils";
 import { fetchTeamLog, type TeamLogRow } from "@/services/admin";
+import { useCachedState, useLoadOnce } from "@/lib/page-cache";
 import { logIcon } from "./log-format";
 import { useAction } from "./use-action";
 
 /** Team-Protokoll: jede ändernde Aktion mit Zeit, Klartext und Gerät. */
 export function LogSection({ pin }: { pin: string }) {
   const { busy, run } = useAction();
-  const [rows, setRows] = useState<TeamLogRow[] | null | undefined>(undefined);
+  const [rows, setRows] = useCachedState<TeamLogRow[] | null | undefined>("log", undefined);
   const load = useCallback(async () => {
     const res = await run("load", () => fetchTeamLog(pin));
     if (res) setRows(res.rows);
-  }, [pin, run]);
-  useEffect(() => {
-    void load();
-  }, [load]);
+  }, [pin, run, setRows]);
+  useLoadOnce("log", load);
 
   const me = getDeviceId();
   const days = useMemo(() => {
