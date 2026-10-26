@@ -267,11 +267,13 @@ test("Live-Daten: abweichende Tipp-Sperre wird gezeigt und lässt sich abgleiche
   await expect.poll(lists).toBe(before + 1);
 });
 
-test("Alle Bereiche laden nur beim ersten Öffnen – danach nur auf Knopfdruck", async ({ page }) => {
+test("Startbildschirm lädt alles vor – danach lädt kein Bereich, nur auf Knopfdruck", async ({
+  page,
+}) => {
   const { calls, errors } = await setup(page);
   await unlock(page);
   const count = (action: string) => calls.filter((c) => c.action === action).length;
-  // Bereich → Aktion, die er beim Öffnen lädt.
+  // Bereich → Aktion, die der Startbildschirm für ihn geladen hat.
   const areas: [string, string][] = [
     ["Tipprunden", "groups"],
     ["Statistik", "stats"],
@@ -279,25 +281,25 @@ test("Alle Bereiche laden nur beim ersten Öffnen – danach nur auf Knopfdruck"
     ["Protokoll", "team_log"],
     ["Anträge", "requests"],
     ["Live-Daten", "alerts"],
+    ["Mitteilungen", "config"],
+    ["System", "passkey_list"],
   ];
-  // Erster Durchgang: jeder Bereich lädt (einmal).
-  const first: Record<string, number> = {};
-  for (const [label, action] of areas) {
-    const before = count(action);
-    await go(page, label);
-    await expect.poll(() => count(action)).toBeGreaterThan(before);
-    await page.waitForTimeout(300);
-    first[action] = count(action);
-  }
-  // Zweiter Durchgang: Hin- und Herwechseln lädt nichts mehr.
+  // Alles genau einmal geladen – auch für die Übersicht kein zweiter Abruf.
+  // (Anträge und Wächter fragen zusätzlich die Zähler der Navigation ab.)
+  const badges = new Set(["requests", "alerts"]);
+  for (const [, action] of areas) if (!badges.has(action)) expect(count(action), action).toBe(1);
+  const after = Object.fromEntries(areas.map(([, a]) => [a, count(a)]));
+  // Durch alle Bereiche und zurück: nichts wird nachgeladen.
   for (const [label] of areas) {
     await go(page, label);
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(250);
   }
-  for (const [, action] of areas) expect(count(action), action).toBe(first[action]);
+  await go(page, "Übersicht");
+  await page.waitForTimeout(250);
+  for (const [, action] of areas) expect(count(action), action).toBe(after[action]);
   // Aktualisieren lädt von Hand neu.
   await go(page, "Tipprunden");
   await page.getByRole("button", { name: "Aktualisieren" }).click();
-  await expect.poll(() => count("groups")).toBe(first.groups + 1);
+  await expect.poll(() => count("groups")).toBe(2);
   expect(errors).toEqual([]);
 });

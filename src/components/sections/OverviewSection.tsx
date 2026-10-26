@@ -46,75 +46,13 @@ import { useMatchStore } from "@/store/match-store";
 import { STAGE_LABEL } from "@/tournament/config";
 import { scoreText, sourcesDiffer } from "./match-format";
 import { logIcon } from "./log-format";
+import { useDashboard, type Data } from "./dashboard-store";
 import { MatchLine } from "./MatchLine";
 import { Page } from "@/components/shell/TeamShell";
 import { fmtTime } from "./use-action";
 
 const day = (t: string | number) => localParts(t, "Europe/Berlin").dayKey;
 const fmtNum = (n: number) => n.toLocaleString("de-DE");
-
-type Data = {
-  stats: Stats | null;
-  config: AdminConfig | null;
-  groups: AdminGroup[] | null;
-  /** null = SQL-Update „Wächter“ fehlt, undefined = noch nicht geladen. */
-  alerts: WatchAlert[] | null | undefined;
-  feedback: FeedbackRow[] | null;
-  /** null = SQL-Update „Team-App“ fehlt. */
-  log: TeamLogRow[] | null | undefined;
-  at: number | null;
-};
-
-const EMPTY: Data = {
-  stats: null,
-  config: null,
-  groups: null,
-  alerts: undefined,
-  feedback: null,
-  log: undefined,
-  at: null,
-};
-
-type DashboardState = { data: Data; loading: boolean; load: (pin: string) => Promise<void> };
-
-/**
- * Daten des Dashboards – außerhalb der Seite gespeichert, damit sie beim Zurückwechseln
- * sofort da sind. Geladen wird nur beim ersten Öffnen und über „Jetzt aktualisieren“.
- */
-const useDashboard = create<DashboardState>((set, get) => ({
-  data: EMPTY,
-  loading: false,
-  load: async (pin) => {
-    if (get().loading) return;
-    set({ loading: true });
-    const [stats, config, groups, alerts, feedback, log] = await Promise.all([
-      fetchStats(pin),
-      fetchConfig(pin),
-      fetchGroups(pin),
-      fetchAlerts(pin),
-      fetchFeedback(pin),
-      fetchTeamLog(pin),
-    ]);
-    const d = get().data;
-    set({
-      loading: false,
-      data: {
-        stats: stats.ok ? stats.data : d.stats,
-        config: config.ok ? config.data : d.config,
-        groups: groups.ok ? (groups.data.data ?? []) : d.groups,
-        alerts: alerts.ok ? alerts.data.alerts : d.alerts,
-        feedback: feedback.ok ? feedback.data.rows : d.feedback,
-        log: log.ok ? log.data.rows : d.log,
-        at: Date.now(),
-      },
-    });
-  },
-}));
-
-// Gesperrt → Daten vergessen; nach dem Entsperren lädt die Übersicht einmal frisch.
-usePinStore.subscribe((s, prev) => {
-  if (prev.pin && !s.pin) useDashboard.setState({ data: EMPTY });
-});
 
 function useDashboardData(pin: string) {
   const data = useDashboard((s) => s.data);

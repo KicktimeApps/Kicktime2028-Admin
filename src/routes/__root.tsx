@@ -1,3 +1,4 @@
+import { AnimatePresence } from "framer-motion";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   createRootRouteWithContext,
@@ -10,6 +11,8 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
 import { PinScreen } from "@/components/shell/PinScreen";
+import { StartScreen } from "@/components/shell/StartScreen";
+import { useStartup } from "@/components/shell/startup-store";
 import { TeamShell } from "@/components/shell/TeamShell";
 import { Toaster } from "@/components/ui/sonner";
 import { useBadgePolling } from "@/hooks/useBadges";
@@ -131,6 +134,7 @@ function RootComponent() {
 
 function App() {
   const pin = usePinStore((s) => s.pin);
+  const ready = useStartup((s) => s.ready);
   const theme = useTeamStore((s) => s.theme);
   useEffect(() => {
     applyTheme(theme, "floodlight");
@@ -148,10 +152,16 @@ function App() {
   useGlobalErrorLogging();
 
   if (!pin) return <PinScreen />;
+  // Nach dem Entsperren einmal alles vorladen (Startbildschirm), danach die Bereiche.
   return (
-    <TeamShell>
-      <Outlet />
-    </TeamShell>
+    <>
+      {ready && (
+        <TeamShell>
+          <Outlet />
+        </TeamShell>
+      )}
+      <AnimatePresence>{!ready && <StartScreen pin={pin} />}</AnimatePresence>
+    </>
   );
 }
 

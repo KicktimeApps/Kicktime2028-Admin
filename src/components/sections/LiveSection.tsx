@@ -20,10 +20,9 @@ import { useMatchStore } from "@/store/match-store";
 import { getNation } from "@/tournament/nations";
 import { ActionButton, Card, ConfirmButton, Info } from "./shared";
 import { fixtureDiffs, fmtKickoff } from "./match-format";
+import { ESPN_DEFAULT, serverFixturesOf, sourceFormOf } from "./section-forms";
 import { WatchCard } from "./WatchCard";
 import { fmtTime, useAction } from "./use-action";
-
-const ESPN_DEFAULT = "uefa.euro";
 
 const CACHE_LABEL: Record<string, string> = {
   hit: "Zwischenspeicher",
@@ -52,15 +51,9 @@ export function LiveSection({ pin }: { pin: string }) {
     const data = await run("config", () => fetchConfig(pin));
     if (!data) return;
     setConfig(data);
-    const src = data.liveSource ?? { ...data.defaults, suffix: "", paused: false };
-    setForm({
-      league: src.league,
-      season: src.season,
-      suffix: src.suffix ?? "",
-      paused: !!src.paused,
-      backup: src.backup ?? ESPN_DEFAULT,
-    });
-    setEspnOn((src.backup ?? ESPN_DEFAULT) !== "");
+    const { form, espnOn } = sourceFormOf(data);
+    setForm(form);
+    setEspnOn(espnOn);
   }, [pin, run, setConfig, setForm, setEspnOn]);
   useLoadOnce("live.config", load);
 
@@ -71,10 +64,8 @@ export function LiveSection({ pin }: { pin: string }) {
     null,
   );
   const loadFixtures = useCallback(async () => {
-    const res = await fetchServerFixtures(pin);
-    if (res.ok) setServerFx(Array.isArray(res.data.rows) ? res.data.rows : "missing");
-    // Edge Function admin noch ohne „fixtures_list“ (vor KickTime 2.18.0).
-    else if (/Unbekannte Aktion/.test(res.error)) setServerFx("missing");
+    const fx = serverFixturesOf(await fetchServerFixtures(pin));
+    if (fx) setServerFx(fx);
   }, [pin, setServerFx]);
   useLoadOnce("live.fixtures", loadFixtures);
   const diffs = Array.isArray(serverFx) ? fixtureDiffs(matches, serverFx) : null;

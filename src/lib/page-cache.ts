@@ -15,6 +15,18 @@ usePinStore.subscribe((s, prev) => {
   if (prev.pin && !s.pin) useCache.setState({ values: {}, loaded: {} });
 });
 
+/**
+ * Daten von außen eintragen (Startbildschirm nach dem Entsperren). `loaded`
+ * nennt die Bereiche, die damit fertig geladen sind – sie laden beim Öffnen nicht
+ * noch einmal. Was fehlschlug, fehlt dort und lädt der Bereich dann selbst.
+ */
+export function primeCache(values: Record<string, unknown>, loaded: string[]) {
+  useCache.setState((s) => ({
+    values: { ...s.values, ...values },
+    loaded: { ...s.loaded, ...Object.fromEntries(loaded.map((k) => [k, true as const])) },
+  }));
+}
+
 /** Wie `useState`, aber der Wert bleibt über Seitenwechsel erhalten (Schlüssel = `key`). */
 export function useCachedState<T>(
   key: string,

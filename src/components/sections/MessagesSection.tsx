@@ -6,6 +6,7 @@ import { fetchConfig, fetchStats, saveAnnouncement, sendBroadcast } from "@/serv
 import { refreshAnnouncement, type Announcement } from "@/services/announcement";
 import { useTeamStore } from "@/store/team-store";
 import { useCachedState, useLoadOnce } from "@/lib/page-cache";
+import { bannerFormOf } from "./section-forms";
 import { ActionButton, Card, ConfirmButton } from "./shared";
 import { fmtTime, useAction } from "./use-action";
 
@@ -23,12 +24,6 @@ const TARGETS = [
 ];
 
 /** ISO → Wert für <input type="datetime-local"> in lokaler Zeit. */
-const toLocalInput = (iso: string | null) => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
-};
-
 export function MessagesSection({ pin }: { pin: string }) {
   const { busy, run } = useAction();
   const pushEnabled = useTeamStore((s) => s.pushEnabled);
@@ -45,9 +40,10 @@ export function MessagesSection({ pin }: { pin: string }) {
     if (cfg.ok) {
       const a = cfg.data.announcement;
       setCurrent(a);
-      setText(a?.text ?? "");
-      setTone(a?.tone ?? "info");
-      setUntil(toLocalInput(a?.until ?? null));
+      const f = bannerFormOf(a);
+      setText(f.text);
+      setTone(f.tone);
+      setUntil(f.until);
     }
     if (stats.ok) setSubs(stats.data.push?.subscriptions ?? null);
   }, [pin, setCurrent, setSubs, setText, setTone, setUntil]);

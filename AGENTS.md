@@ -69,9 +69,16 @@ Server: Sie nutzt **dasselbe Supabase-Projekt und dieselben Edge Functions** (`a
   `lib/page-cache.ts` – `useCachedState(key, …)` statt `useState` für geladene Daten (auch
   Entwürfe, Suchen, aufgeklappte Runden), `useLoadOnce(key, load)` statt `useEffect`. Neu
   geladen wird nur über „Aktualisieren“/„Sofort neu laden“ oder nach eigenen Änderungen; beim
-  Sperren wird alles vergessen. Neue Bereiche genauso bauen (Browser-Test „Alle Bereiche laden
-  nur beim ersten Öffnen“). Im Hintergrund laufen nur die Zähler der Navigation (2 Min.) und
+  Sperren wird alles vergessen. Im Hintergrund laufen nur die Zähler der Navigation (2 Min.) und
   die Live-Spielstände.
+- **Startbildschirm (ab 1.4.0):** nach dem Entsperren (PIN oder Face ID – vorher gibt der Server
+  nichts heraus) `shell/StartScreen.tsx` im Stil der Öffnungsanimation der App, mit echtem
+  Fortschritt. `shell/preload.ts` lädt jeden Abruf genau einmal (max. 2 gleichzeitig) und legt
+  ihn unter denselben Schlüsseln ab wie die Bereiche (`primeCache`, Übersicht `primeDashboard`
+  in `sections/dashboard-store.ts`); gemeinsame Umrechnung in `sections/section-forms.ts`.
+  Fehlgeschlagenes lädt der Bereich selbst; nach 20 s geht es trotzdem weiter. Neuer Bereich
+  mit Server-Daten → auch in `preload.ts` eintragen (Browser-Test „Startbildschirm lädt alles
+  vor“). Nicht vorgeladen: Personensuche, Mitgliederlisten einzelner Runden, Rundentabellen.
 - **Nie viele Admin-Aufrufe gleichzeitig:** Der Server zählt jeden Aufruf vor der PIN-Prüfung –
   zu viele parallel = Sperre „zu viele Versuche“. `services/admin.ts` (gemeinsamer Code) begrenzt
   auf 2 gleichzeitig. Neue Seiten also nicht mit Dutzenden Einzelabrufen bauen.
